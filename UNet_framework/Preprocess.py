@@ -14,11 +14,28 @@ def Preprocess(data_dir, new_data_dir):
     new_image_dir = os.path.join(new_data_dir, "source")
     new_target_dir = os.path.join(new_data_dir, "target")
 
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    if not os.path.exists(new_image_dir):
+        os.makedirs(new_image_dir)
+    if not os.path.exists(new_target_dir):
+        os.makedirs(new_target_dir)
+
     names = [splitext(file)[0] for file in listdir(image_dir) if not file.startswith('.')]
 
     for name in names:
       one_img_dir = os.path.join(image_dir, name + '.exr')
       one_trg_dir = os.path.join(target_dir, name + '.exr')
+
+      print(name)
+      # print(image_dir)
+      # print(target_dir)
+      print(one_img_dir)
+      print(one_trg_dir)
+      # print(new_image_dir)
+      # print(new_target_dir)
 
       image = cv2.imread(one_img_dir, cv2.IMREAD_UNCHANGED)
       target = cv2.imread(one_trg_dir, cv2.IMREAD_UNCHANGED)
