@@ -1,4 +1,5 @@
 
+import os
 from os import listdir
 from os.path import splitext
 from pathlib import Path
@@ -36,9 +37,9 @@ def Preprocess(data_dir, new_data_dir):
           new_trg_dir = os.path.join(new_target_dir, name + '_' + str(i * 8 + j) + '.exr')
 
           new_img = image[i*216 : (i+1)*216, j*372 : (j+1)*372, :]
-          new_trg = image[i*216 : (i+1)*216, j*372 : (j+1)*372, :]
+          new_trg = target[i*216 : (i+1)*216, j*372 : (j+1)*372, :]
           
-          print(new_img.shape)
+          # print(new_img.shape)
 
           cv2.imwrite(new_img_dir, new_img)
           cv2.imwrite(new_trg_dir, new_trg)

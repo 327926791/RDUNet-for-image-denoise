@@ -14,6 +14,8 @@ import os
 import gc
 import time
 
+import Preprocess
+
 # Paramteres
 start = time.perf_counter()
 print("start time: " , start)
@@ -32,21 +34,23 @@ load = False
 # use GPU for training
 gpu = True
 
-root_dir = os.path.dirname(root_dir)
-data_dir = os.path.join(root_dir, 'data\cells')
+data_dir = os.path.join(root_dir, 'data')
+new_data_dir = os.path.join(root_dir, 'patch_data')
+
+Preprocess.Preprocess(data_dir, new_data_dir)
 # data_dir = "./data/cells/"
 
-trainset = Cell_data(data_dir=data_dir, size=image_size)
+trainset = Cell_data(data_dir=new_data_dir, size=image_size)
 trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
 
-testset = Cell_data(data_dir=data_dir, size=image_size, train=False)
+testset = Cell_data(data_dir=new_data_dir, size=image_size, train=False)
 testloader = DataLoader(testset, batch_size=batch_size)
 
 device = torch.device('cuda:0' if gpu else 'cpu')
 print(device)
 
-channels=1
-classes=2
+channels=3
+classes=3
 # model = UNet(channels, classes).to('cuda:0').to(device)
 model = UNet(channels, classes).to(device)
 
@@ -72,7 +76,7 @@ for e in range(epoch_n):
 
         image, label = data
 
-        image = image.unsqueeze(1).to(device)
+        image = image.to(device)
         image = image.float()
         label = label.long().to(device)
 
