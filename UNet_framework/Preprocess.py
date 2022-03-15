@@ -5,6 +5,7 @@ from os.path import splitext
 from pathlib import Path
 import random
 import cv2
+import os
 
 def Preprocess(data_dir, new_data_dir):
     image_dir = os.path.join(data_dir, "source")
