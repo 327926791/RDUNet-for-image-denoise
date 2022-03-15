@@ -26,21 +26,24 @@ def Preprocess(data_dir, new_data_dir):
       target = target[:, :, ::-1]
 
       # 2214 - 6 = 2208
-      image = image[3: 2211, :, :]
-      target = target[3: 2211, :, :]
+      # image = image[3: 2211, :, :]
+      # target = target[3: 2211, :, :]
       # print(image.shape)
 
-      # 2208 * 4096 -> 276 * 512
-      for i in range(8):
+      # 2214 * 4096 -> 572 * 572 (4, 8)
+      for i in range(4):
         for j in range(8):
 
           new_img_dir = os.path.join(new_image_dir, name + '_' + str(i * 8 + j) + '.exr')
           new_trg_dir = os.path.join(new_target_dir, name + '_' + str(i * 8 + j) + '.exr')
 
-          new_img = image[i*216 : (i+1)*216, j*372 : (j+1)*372, :]
-          new_trg = target[i*216 : (i+1)*216, j*372 : (j+1)*372, :]
+          new_img = image[i*545 : i*545+572, j*503 : j*503+572, :]
+          new_trg = target[i*545 : i*545+572, j*503 : j*503+572, :]
+
+          print("i = " + str(i) + ", j = " + str(j))
+          print(i*545, i*545+572, j*503, j*503+572)
           
-          # print(new_img.shape)
+          print(new_img.shape)
 
           cv2.imwrite(new_img_dir, new_img)
           cv2.imwrite(new_trg_dir, new_trg)
