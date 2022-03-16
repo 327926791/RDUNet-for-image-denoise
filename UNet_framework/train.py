@@ -16,21 +16,21 @@ import time
 from optparse import OptionParser
 import Preprocess
 
-def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess):
+def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype):
 
     # Paramteres
     start = time.perf_counter()
     print("start time: ", start)
     # learning rate
-    lr = 1e-4
+    # lr = 1e-4
     # number of training epochs
-    epoch_n = 5
+    # epoch_n = 5
     # input image-mask size
     image_size = 572
     # root directory of project
     root_dir = os.getcwd()
     # training batch size
-    batch_size = 6
+    # batch_size = 6
     # use checkpoint model for training
     load = False
     # use GPU for training
@@ -55,7 +55,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     print('preproc: ' + new_data_dir)
 
     if preprocess:
-        Preprocess.Preprocess(data_dir, new_data_dir)
+        Preprocess.Preprocess(data_dir, new_data_dir, filetype)
     # data_dir = "./data/cells/"
 
     trainset = Cell_data(data_dir=new_data_dir, size=image_size)
@@ -155,7 +155,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             output_masks.append(pred.squeeze(0))
             output_labels.append(label.squeeze(0))
 
-    Preprocess.Output(save_dir, output_masks, output_labels, inputs)
+    Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype)
 
     plt.show()
 
@@ -173,7 +173,9 @@ def get_args():
     parser.add_option('--data_path', default='data')
     parser.add_option('--patch_path', default='patch_data')
     parser.add_option('--result_path', default='results')
-    parser.add_option('--preprocess', default=False, type='bool')
+    parser.add_option('--preprocess', default=False)
+    parser.add_option('--filetype', default='exr')
+
 
     (options, args) = parser.parse_args()
     return options
@@ -181,4 +183,5 @@ def get_args():
 if __name__ == '__main__':
     args = get_args()
 
-    main(epoch_n=args.epochs, lr=args.learning_rate, data_path=args.data_path, patch_path=args.patch_path, result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess)
+    main(epoch_n=args.epochs, lr=args.learning_rate, data_path=args.data_path, patch_path=args.patch_path,
+         result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess, filetype=args.filetype)

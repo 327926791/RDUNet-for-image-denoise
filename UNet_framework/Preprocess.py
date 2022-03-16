@@ -9,7 +9,7 @@ import os
 from PIL import Image
 import torchvision.transforms as T
 
-def Preprocess(data_dir, new_data_dir):
+def Preprocess(data_dir, new_data_dir, filetype):
     image_dir = os.path.join(data_dir, "source")
     target_dir = os.path.join(data_dir, "target")
 
@@ -66,8 +66,16 @@ def Preprocess(data_dir, new_data_dir):
 
     # ################################### PNG image #####################################################
     for name in names:
-        one_img_dir = os.path.join(image_dir, name + '.PNG')
-        one_trg_dir = os.path.join(target_dir, name + '.PNG')
+        one_img_dir = os.path.join(image_dir, name + '.' + filetype)
+        one_trg_dir = os.path.join(target_dir, name + '.' + filetype)
+
+        print(name)
+        #   # print(image_dir)
+        #   # print(target_dir)
+        print(one_img_dir)
+        print(one_trg_dir)
+        #   # print(new_image_dir)
+        #   # print(new_target_dir)
 
         image = cv2.imread(one_img_dir, cv2.IMREAD_UNCHANGED)
         target = cv2.imread(one_trg_dir, cv2.IMREAD_UNCHANGED)
@@ -77,8 +85,8 @@ def Preprocess(data_dir, new_data_dir):
         # 2214 * 4096 -> 572 * 572 (4, 8)
         for i in range(5):
             for j in range(7):
-                new_img_dir = os.path.join(new_image_dir, name + '_' + str(i * 8 + j) + '.png')
-                new_trg_dir = os.path.join(new_target_dir, name + '_' + str(i * 8 + j) + '.png')
+                new_img_dir = os.path.join(new_image_dir, name + '_' + str(i * 8 + j) + '.' + filetype)
+                new_trg_dir = os.path.join(new_target_dir, name + '_' + str(i * 8 + j) + '.' + filetype)
 
                 new_img = image[i * 572: i * 572 + 572, j * 572: j * 572 + 572, :]
                 new_trg = target[i * 572: i * 572 + 572, j * 572: j * 572 + 572, :]
@@ -90,7 +98,7 @@ def Preprocess(data_dir, new_data_dir):
                 tr.save(new_trg_dir)
 
 
-def Output(save_dir, predictions, GTs, inputs):
+def Output(save_dir, predictions, GTs, inputs, filetype):
     idx = 0
     n = len(predictions[0])
     # print(n, batch_size)
@@ -100,9 +108,9 @@ def Output(save_dir, predictions, GTs, inputs):
         GT = GTs[i]
         input = inputs[i]
 
-        file_name = os.path.join(save_dir, 'test_pred_' + str(idx) + '.png')
-        file_name_GT = os.path.join(save_dir, 'test_GT_' + str(idx) + '.png')
-        file_name_in = os.path.join(save_dir, 'test_in_' + str(idx) + '.png')
+        file_name = os.path.join(save_dir, 'test_pred_' + str(idx) + '.' + filetype)
+        file_name_GT = os.path.join(save_dir, 'test_GT_' + str(idx) + '.' + filetype)
+        file_name_in = os.path.join(save_dir, 'test_in_' + str(idx) + '.' + filetype)
 
         im = transform(pred)
         gt = transform(GT)
