@@ -43,7 +43,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     if not os.path.exists(data_dir):
         print('data folder not existed')
     if not os.path.exists(new_data_dir):
-        if preprocess:
+        if preprocess == 1:
             os.makedirs(new_data_dir)
         else:
             print("patch images folder not existed")
@@ -167,13 +167,13 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
 
 def get_args():
     parser = OptionParser()
-    parser.add_option('--epochs', default=10, type='int')
+    parser.add_option('--epochs', default=10, type=int)
     parser.add_option('--learning_rate', default=0.0001)
-    parser.add_option('--batch_size', default=1, type='int')
+    parser.add_option('--batch_size', default=1, type=int)
     parser.add_option('--data_path', default='data')
     parser.add_option('--patch_path', default='patch_data')
     parser.add_option('--result_path', default='results')
-    parser.add_option('--preprocess', default=False)
+    parser.add_option('--preprocess', default=0, type=int)
     parser.add_option('--filetype', default='exr')
 
 
