@@ -17,18 +17,20 @@ from optparse import OptionParser
 import Preprocess
 
 def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess):
-    # Paramteres
 
+    # Paramteres
+    start = time.perf_counter()
+    print("start time: ", start)
     # learning rate
-    # lr = 1e-4
+    lr = 1e-4
     # number of training epochs
-    # epoch_n = 1
+    epoch_n = 5
     # input image-mask size
     image_size = 572
     # root directory of project
     root_dir = os.getcwd()
     # training batch size
-    # batch_size = 1
+    batch_size = 6
     # use checkpoint model for training
     load = False
     # use GPU for training
@@ -74,13 +76,11 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
         print('loading model')
         model.load_state_dict(torch.load('checkpoint.pt'))
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.MSELoss()
 
     # optimizer = optim.Adam(model.parameters(), lr=lr, momentum=0.99, weight_decay=0.0005)
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
 
-    start = time.perf_counter()
-    print("train start time: ", start)
     model.train()
     train_loss = []
     test_loss = []
@@ -97,11 +97,6 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             label = label.to(device).float()
 
             pred = model(image)
-
-            # crop_x = (label.shape[1] - pred.shape[2]) // 2
-            # crop_y = (label.shape[2] - pred.shape[3]) // 2
-            #
-            # label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
 
             loss = criterion(pred, label)
 
@@ -132,20 +127,10 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
                 label = label.to(device).float()
 
                 pred = model(image)
-                # crop_x = (label.shape[1] - pred.shape[2]) // 2
-                # crop_y = (label.shape[2] - pred.shape[3]) // 2
-                #
-                # label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
 
                 loss = criterion(pred, label)
                 total_loss += loss.item()
 
-                # _, pred_labels = torch.max(pred, dim=1)
-
-                # total += label.shape[0] * label.shape[1] * label.shape[2]
-                # correct += (pred_labels == label).sum().item()
-
-            # print('Accuracy: %.4f ---- Loss: %.4f' % (correct / total, total_loss / testset.__len__()))
             test_loss.append(total_loss / testset.__len__())
 
     end = time.perf_counter()
@@ -154,27 +139,23 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     print("testing")
     model.eval()
 
+    inputs = []
     output_masks = []
-    # output_labels = []
+    output_labels = []
 
     with torch.no_grad():
         # for i in range(testset.__len__()):
-        for i, data in enumerate(testloader):
-            image, label = data
+        for i in range(testset.__len__()):
+            image, label = testset.__getitem__(i)
 
-            image = image.to(device).float()
+            image = image.to(device).float().unsqueeze(0)
             pred = model(image)
 
-            output_mask = torch.max(pred, dim=1)[1].cpu().squeeze(0).numpy()
+            inputs.append(image.squeeze(0))
+            output_masks.append(pred.squeeze(0))
+            output_labels.append(label.squeeze(0))
 
-            # crop_x = (labels.shape[0] - output_mask.shape[0]) // 2
-            # crop_y = (labels.shape[1] - output_mask.shape[1]) // 2
-            # labels = labels[crop_x: labels.shape[0] - crop_x, crop_y: labels.shape[1] - crop_y].numpy()
-
-            output_masks.append(output_mask)
-            # output_labels.append(labels)
-
-    Preprocess.Output(save_dir, output_masks)
+    Preprocess.Output(save_dir, output_masks, output_labels, inputs)
 
     plt.show()
 
