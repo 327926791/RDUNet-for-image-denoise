@@ -100,7 +100,7 @@ def Preprocess(data_dir, new_data_dir, filetype):
 
 def Output(save_dir, predictions, GTs, inputs, filetype):
     idx = 0
-    n = len(predictions[0])
+    n = len(predictions)
     # print(n, batch_size)
     transform = T.ToPILImage()
     for i in range(n):
@@ -111,13 +111,28 @@ def Output(save_dir, predictions, GTs, inputs, filetype):
         file_name = os.path.join(save_dir, 'test_pred_' + str(idx) + '.' + filetype)
         file_name_GT = os.path.join(save_dir, 'test_GT_' + str(idx) + '.' + filetype)
         file_name_in = os.path.join(save_dir, 'test_in_' + str(idx) + '.' + filetype)
+        IMAGE_SAVE_PATH = os.path.join(save_dir, 'all_in_one_' + str(idx) + '.' + filetype)
 
         im = transform(pred)
         gt = transform(GT)
         inp = transform(input)
 
-        im.save(file_name)
-        gt.save(file_name_GT)
-        inp.save(file_name_in)
+        IMAGE_COLUMN = 3
+        i = 0
+        from_image = []
+        from_image.append(gt)
+        from_image.append(inp)
+        from_image.append(im)
+        width, height = im.size
+        to_image = Image.new('RGB', (IMAGE_COLUMN * width, height))  # 创建一个新图
+        for k in range(len(from_image)):
+            to_image.paste(from_image[i], (i * width, 0))
+            i = i + 1
+
+        to_image.save(IMAGE_SAVE_PATH)  # 保存新图
+
+        # im.save(file_name)
+        # gt.save(file_name_GT)
+        # inp.save(file_name_in)
 
         idx += 1
