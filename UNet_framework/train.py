@@ -1,4 +1,5 @@
 from model import UNet
+from model_A1 import UNet_A1
 from dataloader import Cell_data
 
 import torch
@@ -70,7 +71,9 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     channels = 3
     classes = 3
     # model = UNet(channels, classes).to('cuda:0').to(device)
-    model = UNet(channels, classes).to(device)
+    # model = UNet(channels, classes).to(device)
+    model = UNet_A1(channels, classes).to(device)
+
 
     if load:
         print('loading model')
@@ -99,10 +102,9 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             pred = model(image)
 
             # #####################  only for A1 ##################### #
-            crop_x = (label.shape[1] - pred.shape[2]) // 2
-            crop_y = (label.shape[2] - pred.shape[3]) // 2
-
-            label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
+            crop_x = (label.shape[2] - pred.shape[2]) // 2
+            crop_y = (label.shape[3] - pred.shape[3]) // 2
+            label = label[:, :, crop_x: label.shape[2] - crop_x, crop_y: label.shape[3] - crop_y]
             # #####################  only for A1 ##################### #
 
             loss = criterion(pred, label)
@@ -135,10 +137,9 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
 
                 pred = model(image)
                 # #####################  only for A1 ##################### #
-                crop_x = (label.shape[1] - pred.shape[2]) // 2
-                crop_y = (label.shape[2] - pred.shape[3]) // 2
-
-                label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
+                crop_x = (label.shape[2] - pred.shape[2]) // 2
+                crop_y = (label.shape[3] - pred.shape[3]) // 2
+                label = label[:, :, crop_x: label.shape[2] - crop_x, crop_y: label.shape[3] - crop_y]
                 # #####################  only for A1 ##################### #
 
                 loss = criterion(pred, label)
@@ -165,7 +166,6 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             # #####################  only for A1 ##################### #
             crop_x = (label.shape[1] - pred.shape[2]) // 2
             crop_y = (label.shape[2] - pred.shape[3]) // 2
-
             label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
             # #####################  only for A1 ##################### #
 
