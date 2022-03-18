@@ -98,6 +98,13 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
 
             pred = model(image)
 
+            # #####################  only for A1 ##################### #
+            crop_x = (label.shape[1] - pred.shape[2]) // 2
+            crop_y = (label.shape[2] - pred.shape[3]) // 2
+
+            label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
+            # #####################  only for A1 ##################### #
+
             loss = criterion(pred, label)
 
             loss.backward()
@@ -127,6 +134,12 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
                 label = label.to(device).float()
 
                 pred = model(image)
+                # #####################  only for A1 ##################### #
+                crop_x = (label.shape[1] - pred.shape[2]) // 2
+                crop_y = (label.shape[2] - pred.shape[3]) // 2
+
+                label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
+                # #####################  only for A1 ##################### #
 
                 loss = criterion(pred, label)
                 total_loss += loss.item()
@@ -144,12 +157,17 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     output_labels = []
 
     with torch.no_grad():
-        # for i in range(testset.__len__()):
         for i in range(testset.__len__()):
             image, label = testset.__getitem__(i)
 
             image = image.to(device).float().unsqueeze(0)
             pred = model(image)
+            # #####################  only for A1 ##################### #
+            crop_x = (label.shape[1] - pred.shape[2]) // 2
+            crop_y = (label.shape[2] - pred.shape[3]) // 2
+
+            label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
+            # #####################  only for A1 ##################### #
 
             inputs.append(image.squeeze(0))
             output_masks.append(pred.squeeze(0))
