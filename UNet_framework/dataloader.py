@@ -16,7 +16,7 @@ from PIL import Image, ImageOps
 #import any other libraries you need below this line
 
 class Cell_data(Dataset):
-    def __init__(self, data_dir, size, train=True, train_test_split=0.85):
+    def __init__(self, data_dir, size, train=True, train_test_split=0.85, filetype='png'):
         ##########################inputs##################################
         # data_dir(string) - directory of the data#########################
         # size(int) - size of the images you want to use###################
@@ -25,6 +25,7 @@ class Cell_data(Dataset):
         super(Cell_data, self).__init__()
         # todo
         # initialize the data class
+        self.filetype = filetype
         self.image_dir = os.path.join(data_dir, "source")
         self.target_dir = os.path.join(data_dir, "target")
         self.size = size
@@ -52,21 +53,20 @@ class Cell_data(Dataset):
         # load image and mask from index idx of your data
         name = self.names[idx]
 
-        one_img_dir = os.path.join(self.image_dir, name + '.png')
-        one_trg_dir = os.path.join(self.target_dir, name + '.png')
+        one_img_dir = os.path.join(self.image_dir, name + '.' + self.filetype)
+        one_trg_dir = os.path.join(self.target_dir, name + '.' + self.filetype)
 
-        image = Image.open(one_img_dir)
-        target = Image.open(one_trg_dir)
-        # image = image[:, :, ::-1]
-        # target = target[:, :, ::-1]
+        if self.filetype == "exr" or self.filetype == "EXR":
+            image = cv2.imread(one_img_dir, cv2.IMREAD_UNCHANGED)
+            target = cv2.imread(one_trg_dir, cv2.IMREAD_UNCHANGED)
+            image = image[:, :, ::-1]
+            target = target[:, :, ::-1]
+        else:
+            image = Image.open(one_img_dir)
+            target = Image.open(one_trg_dir)
+            image = np.array(image)
+            target = np.array(target)
 
-        # todo
-        # return image and mask in tensors
-        # image = image.resize((self.size, self.size))
-        # target = target.resize((self.size, self.size))
-
-        image = np.array(image)
-        target = np.array(target)
         norm_image = (image - np.min(image)) / (np.max(image) - np.min(image))
         norm_target = (target - np.min(target)) / (np.max(target) - np.min(target))
 

@@ -17,7 +17,7 @@ import time
 from optparse import OptionParser
 import Preprocess
 
-def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype):
+def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode):
 
     # Paramteres
     start = time.perf_counter()
@@ -33,7 +33,10 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     # training batch size
     # batch_size = 6
     # use checkpoint model for training
-    load = False
+    if eval_mode == 1:
+        load = True
+    else:
+        load = False
     # use GPU for training
     gpu = True
 
@@ -59,10 +62,10 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
         Preprocess.Preprocess(data_dir, new_data_dir, filetype)
     # data_dir = "./data/cells/"
 
-    trainset = Cell_data(data_dir=new_data_dir, size=image_size)
+    trainset = Cell_data(data_dir=new_data_dir, size=image_size, filetype=filetype)
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
 
-    testset = Cell_data(data_dir=new_data_dir, size=image_size, train=False)
+    testset = Cell_data(data_dir=new_data_dir, size=image_size, train=False, filetype=filetype)
     testloader = DataLoader(testset, batch_size=batch_size)
 
     device = torch.device('cuda:0' if gpu else 'cpu')
@@ -84,71 +87,74 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     # optimizer = optim.Adam(model.parameters(), lr=lr, momentum=0.99, weight_decay=0.0005)
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
 
-    model.train()
-    train_loss = []
-    test_loss = []
-    for e in range(epoch_n):
-        epoch_loss = 0
+
+    if eval_mode != 1:
         model.train()
-        for i, data in enumerate(trainloader):
-            gc.collect()
-            torch.cuda.empty_cache()
+        train_loss = []
+        test_loss = []
+        best_loss = 999999
+        for e in range(epoch_n):
+            epoch_loss = 0
+            model.train()
+            for i, data in enumerate(trainloader):
+                gc.collect()
+                torch.cuda.empty_cache()
 
-            image, label = data
-
-            image = image.to(device).float()
-            label = label.to(device).float()
-
-            pred = model(image)
-
-            # #####################  only for A1 ##################### #
-            crop_x = (label.shape[2] - pred.shape[2]) // 2
-            crop_y = (label.shape[3] - pred.shape[3]) // 2
-            label = label[:, :, crop_x: label.shape[2] - crop_x, crop_y: label.shape[3] - crop_y]
-            # #####################  only for A1 ##################### #
-
-            loss = criterion(pred, label)
-
-            loss.backward()
-
-            optimizer.step()
-            optimizer.zero_grad()
-
-            epoch_loss += loss.item()
-
-            print('batch %d --- Loss: %.4f' % (i, loss.item() / batch_size))
-        print('Epoch %d / %d --- Loss: %.4f' % (e + 1, epoch_n, epoch_loss / trainset.__len__()))
-        train_loss.append(epoch_loss / trainset.__len__())
-
-        torch.save(model.state_dict(), 'checkpoint.pt')
-
-        model.eval()
-
-        total = 0
-        correct = 0
-        total_loss = 0
-
-        with torch.no_grad():
-            for i, data in enumerate(testloader):
                 image, label = data
 
                 image = image.to(device).float()
                 label = label.to(device).float()
 
                 pred = model(image)
+
                 # #####################  only for A1 ##################### #
-                crop_x = (label.shape[2] - pred.shape[2]) // 2
-                crop_y = (label.shape[3] - pred.shape[3]) // 2
-                label = label[:, :, crop_x: label.shape[2] - crop_x, crop_y: label.shape[3] - crop_y]
+                # crop_x = (label.shape[2] - pred.shape[2]) // 2
+                # crop_y = (label.shape[3] - pred.shape[3]) // 2
+                # label = label[:, :, crop_x: label.shape[2] - crop_x, crop_y: label.shape[3] - crop_y]
                 # #####################  only for A1 ##################### #
 
                 loss = criterion(pred, label)
-                total_loss += loss.item()
 
-            test_loss.append(total_loss / testset.__len__())
+                loss.backward()
 
-    end = time.perf_counter()
-    print("train time: ", end - start)
+                optimizer.step()
+                optimizer.zero_grad()
+
+                epoch_loss += loss.item()
+
+                print('batch %d --- Loss: %.4f' % (i, loss.item() / batch_size))
+            print('Epoch %d / %d --- Loss: %.4f' % (e + 1, epoch_n, epoch_loss / trainset.__len__()))
+            train_loss.append(epoch_loss / trainset.__len__())
+
+            model.eval()
+
+            total_loss = 0
+
+            with torch.no_grad():
+                for i, data in enumerate(testloader):
+                    image, label = data
+
+                    image = image.to(device).float()
+                    label = label.to(device).float()
+
+                    pred = model(image)
+                    # #####################  only for A1 ##################### #
+                    # crop_x = (label.shape[2] - pred.shape[2]) // 2
+                    # crop_y = (label.shape[3] - pred.shape[3]) // 2
+                    # label = label[:, :, crop_x: label.shape[2] - crop_x, crop_y: label.shape[3] - crop_y]
+                    # #####################  only for A1 ##################### #
+
+                    loss = criterion(pred, label)
+                    total_loss += loss.item()
+
+                test_loss.append(total_loss / testset.__len__())
+            if epoch_loss < best_loss:
+                torch.save(model.state_dict(), 'checkpoint.pt')
+
+        end = time.perf_counter()
+        print("train time: ", end - start)
+    #eval mode
+
     # testing and visualization
     print("testing")
     model.eval()
@@ -164,9 +170,9 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             image = image.to(device).float().unsqueeze(0)
             pred = model(image)
             # #####################  only for A1 ##################### #
-            crop_x = (label.shape[1] - pred.shape[2]) // 2
-            crop_y = (label.shape[2] - pred.shape[3]) // 2
-            label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
+            # crop_x = (label.shape[1] - pred.shape[2]) // 2
+            # crop_y = (label.shape[2] - pred.shape[3]) // 2
+            # label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
             # #####################  only for A1 ##################### #
 
             inputs.append(image.squeeze(0))
@@ -175,13 +181,14 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
 
     Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype)
 
-    plt.show()
+    if eval_mode != 1:
+        plt.show()
 
-    plt.figure()
-    plt.plot(range(1, epoch_n + 1), train_loss, 'bo', label="training")
-    plt.plot(range(1, epoch_n + 1), test_loss, 'go', label="testing")
-    plt.legend()
-    plt.show()
+        plt.figure()
+        plt.plot(range(1, epoch_n + 1), train_loss, 'bo', label="training")
+        plt.plot(range(1, epoch_n + 1), test_loss, 'go', label="testing")
+        plt.legend()
+        plt.show()
 
 def get_args():
     parser = OptionParser()
@@ -193,6 +200,7 @@ def get_args():
     parser.add_option('--result_path', default='results')
     parser.add_option('--preprocess', default=0, type=int)
     parser.add_option('--filetype', default='exr')
+    parser.add_option('--eval_mode', default=0, type=int)
 
 
     (options, args) = parser.parse_args()
@@ -202,4 +210,4 @@ if __name__ == '__main__':
     args = get_args()
 
     main(epoch_n=args.epochs, lr=args.learning_rate, data_path=args.data_path, patch_path=args.patch_path,
-         result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess, filetype=args.filetype)
+         result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess, filetype=args.filetype, eval_mode=args.eval_mode)
