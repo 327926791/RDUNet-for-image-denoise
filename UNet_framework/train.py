@@ -82,7 +82,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
         print('loading model')
         model.load_state_dict(torch.load('checkpoint.pt'))
 
-    criterion = nn.MSELoss()
+    criterion = nn.L1Loss()
 
     # optimizer = optim.Adam(model.parameters(), lr=lr, momentum=0.99, weight_decay=0.0005)
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
