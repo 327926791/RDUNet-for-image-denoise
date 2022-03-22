@@ -16,6 +16,7 @@ import gc
 import time
 from optparse import OptionParser
 import Preprocess
+from metrics import PSNR, SSIM
 
 def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode):
 
@@ -39,6 +40,9 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
         load = False
     # use GPU for training
     gpu = True
+
+    psnr = PSNR(data_range=1., reduction='sum')
+    ssim = SSIM(channels=3, data_range=1., reduction='sum')
 
     data_dir = os.path.join(root_dir, data_path)
     new_data_dir = os.path.join(root_dir, patch_path)
@@ -147,16 +151,26 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
                     loss = criterion(pred, label)
                     total_loss += loss.item()
 
+                    # calculate PSNR and SSIM
+                    psnr_batch = psnr(pred, label)
+                    ssim_batch = ssim(pred, label)
+                    print('validation batch %d --- PSNR: %.4f' % (i, psnr_batch))
+                    print('validation batch %d --- SSIM: %.4f' % (i, ssim_batch))
+
                 test_loss.append(total_loss / testset.__len__())
             if epoch_loss < best_loss:
                 torch.save(model.state_dict(), 'checkpoint.pt')
+            print("--------------------------------------------------------------------------")
+            print(" ")
 
         end = time.perf_counter()
         print("train time: ", end - start)
+
+
     #eval mode
 
     # testing and visualization
-    print("testing")
+    print("testing...")
     model.eval()
 
     inputs = []
@@ -174,6 +188,13 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             # crop_y = (label.shape[2] - pred.shape[3]) // 2
             # label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
             # #####################  only for A1 ##################### #
+
+            psnr_batch = psnr(pred, label)
+            ssim_batch = ssim(pred, label)
+            print('evaluation image %d --- PSNR: %.4f' % (i, psnr_batch))
+            print('evaluation image %d --- SSIM: %.4f' % (i, ssim_batch))
+            print("============================================================")
+
 
             inputs.append(image.squeeze(0))
             output_masks.append(pred.squeeze(0))
