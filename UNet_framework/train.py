@@ -17,6 +17,7 @@ import time
 from optparse import OptionParser
 import Preprocess
 from metrics import PSNR, SSIM
+from diffmap import GetDiffMap
 
 def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode):
 
@@ -200,6 +201,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             output_masks.append(pred.squeeze(0))
             output_labels.append(label.squeeze(0))
 
+    GetDiffMap(output_masks, output_labels, inputs)     # only exr
     Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype)
 
     if eval_mode != 1:
