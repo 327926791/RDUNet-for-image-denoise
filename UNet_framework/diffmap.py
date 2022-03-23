@@ -77,9 +77,9 @@ def get_heat_map(preds, labels, inputs,dir_name):
     if not os.path.exists(heatmap_pred_label_dir):
         os.makedirs(heatmap_pred_label_dir)
     for i in range(n):
-        input = inputs[i]
-        label = labels[i]
-        pred = preds[i]
+        input = inputs[i].permute(1,2,0)
+        label = labels[i].permute(1,2,0)
+        pred = preds[i].permute(1,2,0)
         input = RGBtoGray(input)
         label = RGBtoGray(label)
         pred = RGBtoGray(pred)
