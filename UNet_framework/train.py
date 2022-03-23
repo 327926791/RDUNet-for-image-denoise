@@ -183,7 +183,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             image, label = testset.__getitem__(i)
 
             image = image.to(device).float().unsqueeze(0)
-            label = label.to(device).float()
+            label = label.to(device).float().unsqueeze(0)
             pred = model(image)
             # #####################  only for A1 ##################### #
             # crop_x = (label.shape[1] - pred.shape[2]) // 2
@@ -201,8 +201,8 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             inputs.append(image.squeeze(0))
             output_masks.append(pred.squeeze(0))
             output_labels.append(label.squeeze(0))
-
-    GetDiffMap(output_masks, output_labels, inputs)     # only exr
+    if filetype == "exr" or filetype == "EXR":
+        GetDiffMap(output_masks, output_labels, inputs)     # only exr
     Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype)
 
     if eval_mode != 1:
