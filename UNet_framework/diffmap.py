@@ -5,6 +5,8 @@ from os.path import splitext
 import cv2
 import numpy as np
 import plotly.express as px
+import torch
+
 def RGBtoGray(image):
     r, g, b = image[:, :, 0], image[:, :, 1], image[:, :, 2]
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
@@ -24,16 +26,16 @@ def compare(image, target):
     # print("gray target shape:")
     # print(gray_target)
 
-    difference = np.abs(gray_target - gray_image)
+    difference = torch.abs(gray_target - gray_image)
     print("diff:")
-    print(np.sum(difference))
+    print(torch.sum(difference))
 
     return difference
 
 
 def GetDiffMap(preds, labels, inputs):
     root_dir = os.getcwd()
-    data_path = 'result'
+    data_path = 'results'
     data_dir = os.path.join(root_dir, data_path)
     n = len(preds)
 
@@ -41,11 +43,19 @@ def GetDiffMap(preds, labels, inputs):
     dir2 = os.path.join(data_dir, "diff_input_GT")
 
     for i in range(n):
-        input = inputs[i]
-        label = labels[i]
-        pred = preds[i]
+        input = inputs[i].permute(1,2,0)
+        label = labels[i].permute(1,2,0)
+        pred = preds[i].permute(1,2,0)
         diff_input_pred = compare(input, pred)
         diff_input_GT = compare(input, label)
+
+        diff_input_pred = np.array(diff_input_pred.cpu())
+        diff_input_GT = np.array(diff_input_GT.cpu())
+
+        if not os.path.exists(dir1):
+            os.makedirs(dir1)
+        if not os.path.exists(dir2):
+            os.makedirs(dir2)
 
         ip_dir = os.path.join(dir1, 'test_' + str(i) + '.exr')
         ig_dir = os.path.join(dir2, 'test_' + str(i) + '.exr')

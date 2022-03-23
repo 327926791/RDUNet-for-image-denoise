@@ -7,6 +7,8 @@ from pathlib import Path
 import random
 import cv2
 import os
+
+import torch
 from PIL import Image
 import torchvision.transforms as T
 
@@ -110,31 +112,41 @@ def Output(save_dir, predictions, GTs, inputs, filetype):
         GT = GTs[i]
         input = inputs[i]
 
-        file_name = os.path.join(save_dir, 'test_pred_' + str(idx) + '.' + 'png')
-        file_name_GT = os.path.join(save_dir, 'test_GT_' + str(idx) + '.' + 'png')
-        file_name_in = os.path.join(save_dir, 'test_in_' + str(idx) + '.' + 'png')
-        IMAGE_SAVE_PATH = os.path.join(save_dir, 'all_in_one_' + str(idx) + '.' + 'png')
+        # file_name = os.path.join(save_dir, 'test_pred_' + str(idx) + '.' + 'png')
+        # file_name_GT = os.path.join(save_dir, 'test_GT_' + str(idx) + '.' + 'png')
+        # file_name_in = os.path.join(save_dir, 'test_in_' + str(idx) + '.' + 'png')
+        IMAGE_SAVE_PATH = os.path.join(save_dir, 'all_in_one_' + str(idx) + '.' + filetype)
 
-        im = transform(pred)
-        gt = transform(GT)
-        inp = transform(input)
+        if filetype == 'EXR' or filetype == 'exr':
+            pred = pred.permute(1, 2, 0).cpu()
+            GT = GT.permute(1, 2, 0).cpu()
+            input = input.permute(1, 2, 0).cpu()
 
-        IMAGE_COLUMN = 3
-        i = 0
-        from_image = []
-        from_image.append(gt)
-        from_image.append(inp)
-        from_image.append(im)
-        width, height = im.size
-        to_image = Image.new('RGB', (IMAGE_COLUMN * width, height))  # 创建一个新图
-        for k in range(len(from_image)):
-            to_image.paste(from_image[i], (i * width, 0))
-            i = i + 1
+            all_in_one = np.asarray(torch.cat((pred, GT, input), dim=1))
+            cv2.imwrite(IMAGE_SAVE_PATH, all_in_one)
 
-        to_image.save(IMAGE_SAVE_PATH)  # 保存新图
 
-        # im.save(file_name)
-        # gt.save(file_name_GT)
-        # inp.save(file_name_in)
+        if filetype == 'png':
+            im = transform(pred)
+            gt = transform(GT)
+            inp = transform(input)
+
+            IMAGE_COLUMN = 3
+            i = 0
+            from_image = []
+            from_image.append(gt)
+            from_image.append(inp)
+            from_image.append(im)
+            width, height = im.size
+            to_image = Image.new('RGB', (IMAGE_COLUMN * width, height))  # 创建一个新图
+            for k in range(len(from_image)):
+                to_image.paste(from_image[i], (i * width, 0))
+                i = i + 1
+
+            to_image.save(IMAGE_SAVE_PATH)  # 保存新图
+
+            # im.save(file_name)
+            # gt.save(file_name_GT)
+            # inp.save(file_name_in)
 
         idx += 1
