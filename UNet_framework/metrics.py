@@ -1,3 +1,4 @@
+import pytorch_ssim
 import torch
 from pytorch_msssim import SSIM as _SSIM
 
@@ -50,6 +51,8 @@ class SSIM(object):
         self.data_range = data_range
         self.reduction = reduction
         self.ssim_module = _SSIM(data_range=data_range, size_average=False, channel=channels)
+        _SSIM
+        # self.ssim_module = _SSIM()
 
     def __call__(self, outputs, targets):
         with torch.set_grad_enabled(False):

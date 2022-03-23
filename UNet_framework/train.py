@@ -79,8 +79,8 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     channels = 3
     classes = 3
     # model = UNet(channels, classes).to('cuda:0').to(device)
-    # model = UNet(channels, classes).to(device)
-    model = UNet_A1(channels, classes).to(device)
+    model = UNet(channels, classes).to(device)
+    # model = UNet_A1(channels, classes).to(device)
 
 
     if load:
@@ -183,6 +183,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             image, label = testset.__getitem__(i)
 
             image = image.to(device).float().unsqueeze(0)
+            label = label.to(device).float()
             pred = model(image)
             # #####################  only for A1 ##################### #
             # crop_x = (label.shape[1] - pred.shape[2]) // 2
