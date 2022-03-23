@@ -18,7 +18,7 @@ from optparse import OptionParser
 import Preprocess
 from metrics import PSNR, SSIM
 from diffmap import GetDiffMap
-
+from diffmap import get_heat_map
 def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode):
 
     # Paramteres
@@ -203,6 +203,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             output_labels.append(label.squeeze(0))
     if filetype == "exr" or filetype == "EXR":
         GetDiffMap(output_masks, output_labels, inputs)     # only exr
+        get_heat_map(output_labels,output_labels,inputs,"heat_map")
     Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype)
 
     if eval_mode != 1:

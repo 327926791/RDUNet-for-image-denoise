@@ -82,3 +82,4 @@ def get_heat_map(preds, labels, inputs,dir_name):
         fig_pred_label.write_image(heatmap_pred_label_dir+'/'+str(i)+'_pred_label.png')
         fig_input_label.write_image(heatmap_inputs_label_dir+'/'+str(i)+'_input_label.png')
 
+
