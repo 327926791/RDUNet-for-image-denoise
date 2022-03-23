@@ -203,7 +203,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             output_labels.append(label.squeeze(0))
     if filetype == "exr" or filetype == "EXR":
         GetDiffMap(output_masks, output_labels, inputs)     # only exr
-        get_heat_map(output_labels,output_labels,inputs,result_path)
+        get_heat_map(output_masks,output_labels,inputs,result_path)
 
     Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype)
 
