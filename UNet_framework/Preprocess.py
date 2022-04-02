@@ -102,15 +102,22 @@ def Preprocess(data_dir, new_data_dir, filetype):
                     tr.save(new_trg_dir)
 
 
-def Output(save_dir, predictions, GTs, inputs, filetype):
+def Output(save_dir, predictions, GTs, inputs, filetype, diff_input_pred_list, diff_input_GT_list, heat_map_pred_label_list, heat_map_input_label_list):
     idx = 0
     n = len(predictions)
     # print(n, batch_size)
     transform = T.ToPILImage()
+    diff_input_pred_list = torch.tensor(diff_input_pred_list)
+    diff_input_GT_list = torch.tensor(diff_input_GT_list)
+    print("generate output image")
     for i in range(n):
         pred = predictions[i]
         GT = GTs[i]
         input = inputs[i]
+        diff_input_pred = diff_input_pred_list[i]
+        diff_input_GT = diff_input_GT_list[i]
+        # heat_map_pred_label = heat_map_pred_label_list[i]
+        # heat_map_input_label = heat_map_input_label_list[i]
 
         # file_name = os.path.join(save_dir, 'test_pred_' + str(idx) + '.' + 'png')
         # file_name_GT = os.path.join(save_dir, 'test_GT_' + str(idx) + '.' + 'png')
@@ -121,8 +128,16 @@ def Output(save_dir, predictions, GTs, inputs, filetype):
             pred = pred.permute(1, 2, 0).cpu()
             GT = GT.permute(1, 2, 0).cpu()
             input = input.permute(1, 2, 0).cpu()
+            print("pred shape: " + str(pred.shape))
+            print("GT shape: " + str(GT.shape))
+            print("input shape: " + str(input.shape))
+            print("diff_input_pred shape: " + str(diff_input_pred.shape))
+            print("diff_input_GT shape: " + str(diff_input_GT.shape))
+            # print("heat_map_pred_label shape: " + str(heat_map_pred_label.shape))
+            # print("heat_map_input_label shape: " + str(heat_map_input_label.shape))
 
-            all_in_one = np.asarray(torch.cat((pred, GT, input), dim=1))
+
+            all_in_one = np.asarray(torch.cat((pred, GT, input, diff_input_pred, diff_input_GT ), dim=1))
             cv2.imwrite(IMAGE_SAVE_PATH, all_in_one)
 
 

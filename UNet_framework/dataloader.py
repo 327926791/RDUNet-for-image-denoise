@@ -1,5 +1,5 @@
 import torch
-# import torchvision
+from torchvision import transforms as T
 from torch.utils.data import Dataset, DataLoader, random_split
 
 import numpy as np
@@ -16,7 +16,7 @@ from PIL import Image, ImageOps
 #import any other libraries you need below this line
 
 class Cell_data(Dataset):
-    def __init__(self, data_dir, size, train=True, train_test_split=0.85, filetype='png'):
+    def __init__(self, data_dir, size, train=True, train_test_split=0.95, filetype='png'):
         ##########################inputs##################################
         # data_dir(string) - directory of the data#########################
         # size(int) - size of the images you want to use###################
@@ -59,8 +59,28 @@ class Cell_data(Dataset):
         if self.filetype == "exr" or self.filetype == "EXR":
             image = cv2.imread(one_img_dir, cv2.IMREAD_UNCHANGED)
             target = cv2.imread(one_trg_dir, cv2.IMREAD_UNCHANGED)
+
+            rand_scale = np.random.randint(11, 16)
+            rand_scale = float(rand_scale / 10)
+            width = int(image.shape[1] * rand_scale)
+            height = int(image.shape[0] * rand_scale)
+            dim = (width, height)
+
+            # print("before resize: " + str(image.shape))
+            image = cv2.resize(image, dim)
+            target = cv2.resize(target, dim)
+
             image = image[:, :, ::-1]
             target = target[:, :, ::-1]
+
+            # print("before crop: " + str(image.shape))
+            rand_crop_x = np.random.randint(0, image.shape[1] - 572)
+            rand_crop_y = np.random.randint(0, image.shape[0] - 572)
+            image = image[rand_crop_x:rand_crop_x+572, rand_crop_y:rand_crop_y+572,:]
+            target = target[rand_crop_x:rand_crop_x + 572, rand_crop_y:rand_crop_y + 572, :]
+            # print("after crop: " + str(image.shape))
+
+
         else:
             image = Image.open(one_img_dir)
             target = Image.open(one_trg_dir)

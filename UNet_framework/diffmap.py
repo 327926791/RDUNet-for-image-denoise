@@ -47,6 +47,8 @@ def GetDiffMap(preds, labels, inputs):
     if not os.path.exists(dir2):
         os.makedirs(dir2)
 
+    diff_input_pred_list = []
+    diff_input_GT_list = []
     for i in range(n):
         input = inputs[i].permute(1,2,0)
         label = labels[i].permute(1,2,0)
@@ -57,12 +59,30 @@ def GetDiffMap(preds, labels, inputs):
         diff_input_pred = np.array(diff_input_pred.cpu())
         diff_input_GT = np.array(diff_input_GT.cpu())
 
+        diff_input_pred = np.array([diff_input_pred, diff_input_pred, diff_input_pred])
+        print(diff_input_pred.shape)
+        diff_input_pred = np.transpose(diff_input_pred,(1,2,0))
+        diff_input_GT = np.array([diff_input_GT, diff_input_GT, diff_input_GT])
+        print(diff_input_GT.shape)
+        diff_input_GT = np.transpose(diff_input_GT,(1,2,0))
+
+        diff_input_pred_list.append(diff_input_pred)
+        diff_input_GT_list.append(diff_input_GT)
+
+
+
         ip_dir = os.path.join(dir1, 'test_' + str(i) + '.exr')
         ig_dir = os.path.join(dir2, 'test_' + str(i) + '.exr')
 
-        cv2.imwrite(ip_dir, diff_input_pred)
-        cv2.imwrite(ig_dir, diff_input_GT)
+        # cv2.imwrite(ip_dir, diff_input_pred)
+        # cv2.imwrite(ig_dir, diff_input_GT)
 
+    # diff_input_pred_list = torch.tensor(diff_input_pred_list)
+    # diff_input_GT_list = torch.tensor(diff_input_GT_list)
+    #
+    # print(diff_input_pred_list.shape)
+    # print(diff_input_GT_list.shape)
+    return diff_input_pred_list, diff_input_GT_list
 
 
 def get_heat_map(preds, labels, inputs,dir_name):
@@ -76,6 +96,10 @@ def get_heat_map(preds, labels, inputs,dir_name):
         os.makedirs(heatmap_inputs_label_dir)
     if not os.path.exists(heatmap_pred_label_dir):
         os.makedirs(heatmap_pred_label_dir)
+
+    heat_map_pred_label_list = []
+    heat_map_input_label_list = []
+
     for i in range(n):
         input = inputs[i].permute(1,2,0)
         label = labels[i].permute(1,2,0)
@@ -85,6 +109,9 @@ def get_heat_map(preds, labels, inputs,dir_name):
         pred = RGBtoGray(pred)
         heat_map_pred_label = pred - label
         heat_map_input_label = input - label
+
+        heat_map_pred_label_list.append(heat_map_pred_label.cpu())
+        heat_map_input_label_list.append(heat_map_input_label.cpu())
 
         heat_map_pred_label = np.array(heat_map_pred_label.cpu())
         heat_map_input_label = np.array(heat_map_input_label.cpu())
@@ -99,3 +126,9 @@ def get_heat_map(preds, labels, inputs,dir_name):
         fig_input_label.write_image(heatmap_inputs_label_dir+'/'+str(i)+'_input_label.png')
 
 
+    # heat_map_pred_label_list = torch.tensor(heat_map_pred_label_list)
+    # heat_map_input_label_list = torch.tensor(heat_map_input_label_list)
+    #
+    # print(heat_map_pred_label_list.shape)
+    # print(heat_map_input_label_list.shape)
+    return heat_map_pred_label_list, heat_map_input_label_list

@@ -179,6 +179,8 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     output_labels = []
 
     with torch.no_grad():
+        # device = torch.device('cpu')
+        # model = model.to(device)
         for i in range(testset.__len__()):
             image, label = testset.__getitem__(i)
 
@@ -202,10 +204,12 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             output_masks.append(pred.squeeze(0))
             output_labels.append(label.squeeze(0))
     if filetype == "exr" or filetype == "EXR":
-        GetDiffMap(output_masks, output_labels, inputs)     # only exr
-        get_heat_map(output_masks,output_labels,inputs,result_path)
-
-    Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype)
+        diff_input_pred_list, diff_input_GT_list = GetDiffMap(output_masks, output_labels, inputs)     # only exr
+        # heat_map_pred_label_list, heat_map_input_label_list = get_heat_map(output_masks,output_labels,inputs,result_path)
+    heat_map_pred_label_list = None
+    heat_map_input_label_list = None
+    Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype, diff_input_pred_list, diff_input_GT_list,
+                      heat_map_pred_label_list, heat_map_input_label_list)
 
     if eval_mode != 1:
         plt.show()
