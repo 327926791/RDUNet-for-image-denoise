@@ -1,0 +1,18 @@
+---
+model:
+  base filters: 128
+  channels: 3
+train:
+  patch size: 64
+  batch size: 16
+  learning rate: 1.e-4
+  weight decay: 1.e-5
+  scheduler gamma: 0.5
+  scheduler step: 3
+  epochs: 21
+  dataset splits: 10
+  device: cuda:0
+  multi gpu: false
+  workers: 10
+  dataset path: '305/'
+  checkpoint path: 'Checkpoints'
