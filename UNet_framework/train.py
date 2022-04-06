@@ -10,6 +10,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 
 import os
+import yaml
 
 #import any other libraries you need below this line
 import gc
@@ -19,7 +20,15 @@ import Preprocess
 from metrics import PSNR, SSIM
 from diffmap import GetDiffMap
 from diffmap import get_heat_map
+from model_RDUnet import *
+
+
 def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode, resume):
+    with open('config.yaml', 'r') as stream:  # Load YAML configuration file.
+        config = yaml.safe_load(stream)
+
+    model_params = config['model']
+
 
     # Paramteres
     start = time.perf_counter()
@@ -78,9 +87,10 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
 
     channels = 3
     classes = 3
-    # model = UNet(channels, classes).to('cuda:0').to(device)
+
     model = UNet(channels, classes).to(device)
     # model = UNet_A1(channels, classes).to(device)
+    # model = RDUNet(**model_params).to(device)
 
 
     if load:
