@@ -79,6 +79,25 @@ class Cell_data(Dataset):
             image = image[rand_crop_x:rand_crop_x+572, rand_crop_y:rand_crop_y+572,:]
             target = target[rand_crop_x:rand_crop_x + 572, rand_crop_y:rand_crop_y + 572, :]
             # print("after crop: " + str(image.shape))
+            flip = random.randint(1,4)
+
+            if flip == 2:
+                image = np.flipud(image)
+                target = np.flipud(target)
+            elif flip == 3:
+                image = np.fliplr(image)
+                target = np.fliplr(target)
+            elif flip == 4:
+                image = np.fliplr(image)
+                target = np.fliplr(target)
+                image = np.flipud(image)
+                target = np.flipud(target)
+
+            rot = random.randint(1, 4)
+            image = np.rot90(image, rot)
+            target = np.rot90(target, rot)
+
+
 
 
         else:

@@ -19,7 +19,7 @@ import Preprocess
 from metrics import PSNR, SSIM
 from diffmap import GetDiffMap
 from diffmap import get_heat_map
-def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode):
+def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode, resume):
 
     # Paramteres
     start = time.perf_counter()
@@ -35,7 +35,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     # training batch size
     # batch_size = 6
     # use checkpoint model for training
-    if eval_mode == 1:
+    if eval_mode == 1 or resume == 1:
         load = True
     else:
         load = False
@@ -231,7 +231,7 @@ def get_args():
     parser.add_option('--preprocess', default=0, type=int)
     parser.add_option('--filetype', default='exr')
     parser.add_option('--eval_mode', default=0, type=int)
-
+    parser.add_option('--resume', default=1, type=int)
 
     (options, args) = parser.parse_args()
     return options
@@ -240,4 +240,4 @@ if __name__ == '__main__':
     args = get_args()
 
     main(epoch_n=args.epochs, lr=args.learning_rate, data_path=args.data_path, patch_path=args.patch_path,
-         result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess, filetype=args.filetype, eval_mode=args.eval_mode)
+         result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess, filetype=args.filetype, eval_mode=args.eval_mode, resume=args.resume)
