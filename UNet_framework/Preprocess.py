@@ -128,16 +128,17 @@ def Output(save_dir, predictions, GTs, inputs, filetype, diff_input_pred_list, d
             pred = pred.permute(1, 2, 0).cpu()
             GT = GT.permute(1, 2, 0).cpu()
             input = input.permute(1, 2, 0).cpu()
-            print("pred shape: " + str(pred.shape))
-            print("GT shape: " + str(GT.shape))
-            print("input shape: " + str(input.shape))
-            print("diff_input_pred shape: " + str(diff_input_pred.shape))
-            print("diff_input_GT shape: " + str(diff_input_GT.shape))
+            # print("pred shape: " + str(pred.shape))
+            # print("GT shape: " + str(GT.shape))
+            # print("input shape: " + str(input.shape))
+            # print("diff_input_pred shape: " + str(diff_input_pred.shape))
+            # print("diff_input_GT shape: " + str(diff_input_GT.shape))
             # print("heat_map_pred_label shape: " + str(heat_map_pred_label.shape))
             # print("heat_map_input_label shape: " + str(heat_map_input_label.shape))
 
 
             all_in_one = np.asarray(torch.cat((pred, GT, input, diff_input_pred, diff_input_GT ), dim=1))
+            # all_in_one = np.asarray(torch.cat((pred, GT, input), dim=1))
             cv2.imwrite(IMAGE_SAVE_PATH, all_in_one)
 
 

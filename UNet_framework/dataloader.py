@@ -106,11 +106,13 @@ class Cell_data(Dataset):
             image = np.array(image)
             target = np.array(target)
 
-        norm_image = (image - np.min(image)) / (np.max(image) - np.min(image))
-        norm_target = (target - np.min(target)) / (np.max(target) - np.min(target))
+        # norm_image = (image - np.min(image)) / (np.max(image) - np.min(image))
+        norm_image = np.ascontiguousarray(image)
+        # norm_target = (target - np.min(target)) / (np.max(target) - np.min(target))
+        norm_target = np.ascontiguousarray(target)
 
-        ts_image = torch.as_tensor(norm_image).squeeze(0).permute(2, 0, 1)
-        ts_target = torch.as_tensor(norm_target).squeeze(0).permute(2, 0, 1)
+        ts_image = torch.tensor(norm_image).squeeze(0).permute(2, 0, 1)
+        ts_target = torch.tensor(norm_target).squeeze(0).permute(2, 0, 1)
         # print('input image size:' + str(ts_image.size()))
 
         return ts_image, ts_target

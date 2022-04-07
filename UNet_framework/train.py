@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 import os
 import yaml
-
+import numpy as np
 #import any other libraries you need below this line
 import gc
 import time
@@ -21,9 +21,10 @@ from metrics import PSNR, SSIM
 from diffmap import GetDiffMap
 from diffmap import get_heat_map
 from model_RDUnet import *
+import cv2
 
 
-def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, eval_mode, resume):
+def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, test_mode, eval_mode, resume, eval_image):
     with open('config.yaml', 'r') as stream:  # Load YAML configuration file.
         config = yaml.safe_load(stream)
 
@@ -44,7 +45,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     # training batch size
     # batch_size = 6
     # use checkpoint model for training
-    if eval_mode == 1 or resume == 1:
+    if test_mode == 1 or resume == 1 or eval_mode == 1:
         load = True
     else:
         load = False
@@ -103,7 +104,7 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=0.0005)
 
 
-    if eval_mode != 1:
+    if test_mode != 1 and eval_mode != 1:
         model.train()
         train_loss = []
         test_loss = []
@@ -184,44 +185,103 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
     print("testing...")
     model.eval()
 
-    inputs = []
-    output_masks = []
-    output_labels = []
-
-    with torch.no_grad():
-        # device = torch.device('cpu')
-        # model = model.to(device)
-        for i in range(testset.__len__()):
-            image, label = testset.__getitem__(i)
-
-            image = image.to(device).float().unsqueeze(0)
-            label = label.to(device).float().unsqueeze(0)
-            pred = model(image)
-            # #####################  only for A1 ##################### #
-            # crop_x = (label.shape[1] - pred.shape[2]) // 2
-            # crop_y = (label.shape[2] - pred.shape[3]) // 2
-            # label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
-            # #####################  only for A1 ##################### #
-
-            psnr_batch = psnr(pred, label)
-            ssim_batch = ssim(pred, label)
-            print('evaluation image %d --- PSNR: %.4f' % (i, psnr_batch))
-            print('evaluation image %d --- SSIM: %.4f' % (i, ssim_batch))
-            print("============================================================")
-
-
-            inputs.append(image.squeeze(0))
-            output_masks.append(pred.squeeze(0))
-            output_labels.append(label.squeeze(0))
-    if filetype == "exr" or filetype == "EXR":
-        diff_input_pred_list, diff_input_GT_list = GetDiffMap(output_masks, output_labels, inputs)     # only exr
-        # heat_map_pred_label_list, heat_map_input_label_list = get_heat_map(output_masks,output_labels,inputs,result_path)
-    heat_map_pred_label_list = None
-    heat_map_input_label_list = None
-    Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype, diff_input_pred_list, diff_input_GT_list,
-                      heat_map_pred_label_list, heat_map_input_label_list)
-
     if eval_mode != 1:
+        inputs = []
+        output_masks = []
+        output_labels = []
+
+        with torch.no_grad():
+            # device = torch.device('cpu')
+            # model = model.to(device)
+            for i in range(testset.__len__()):
+                image, label = testset.__getitem__(i)
+
+                image = image.to(device).float().unsqueeze(0)
+                label = label.to(device).float().unsqueeze(0)
+                pred = model(image)
+                # #####################  only for A1 ##################### #
+                # crop_x = (label.shape[1] - pred.shape[2]) // 2
+                # crop_y = (label.shape[2] - pred.shape[3]) // 2
+                # label = label[:, crop_x: label.shape[1] - crop_x, crop_y: label.shape[2] - crop_y]
+                # #####################  only for A1 ##################### #
+
+                psnr_batch = psnr(pred, label)
+                ssim_batch = ssim(pred, label)
+                print('evaluation image %d --- PSNR: %.4f' % (i, psnr_batch))
+                print('evaluation image %d --- SSIM: %.4f' % (i, ssim_batch))
+                print("============================================================")
+
+
+                inputs.append(image.squeeze(0))
+                output_masks.append(pred.squeeze(0))
+                output_labels.append(label.squeeze(0))
+        if filetype == "exr" or filetype == "EXR":
+            diff_input_pred_list, diff_input_GT_list = GetDiffMap(output_masks, output_labels, inputs)     # only exr
+            # heat_map_pred_label_list, heat_map_input_label_list = get_heat_map(output_masks,output_labels,inputs,result_path)
+        heat_map_pred_label_list = None
+        heat_map_input_label_list = None
+        Preprocess.Output(save_dir, output_masks, output_labels, inputs, filetype, diff_input_pred_list, diff_input_GT_list,
+                          heat_map_pred_label_list, heat_map_input_label_list)
+    else:
+        #eval_mode
+        #input full size image
+        image = cv2.imread(eval_image, cv2.IMREAD_UNCHANGED)
+        cv2.imwrite("evaluate_input.exr", image)
+        # image = image[:, :, ::-1]
+        print(image.shape)
+
+        width = int(image.shape[1])
+        height = int(image.shape[0])
+        ncol = int(width/572)
+        nrow = int(height/572)
+        patch_list = []
+        pred_list = []
+        output_image = np.zeros((nrow*572, ncol*572, 3)).astype(np.float32)
+        # output_image = np.asarray(output_image)
+        print(output_image.shape)
+        output_labels = []
+        for row in range(0, nrow):
+            for col in range(0, ncol):
+                patch = image[row*572 : row*572+572, col*572 : col*572+572, :]
+                # output_labels.append(torch.tensor(patch).permute(2, 0, 1))
+                # norm_image = (patch - np.min(patch)) / (np.max(patch) - np.min(patch))
+                # print(norm_image.shape)
+                patch = torch.tensor(patch).squeeze(0).permute(2, 0, 1)
+                patch_list.append(patch)
+
+        model.eval()
+        output_masks = []
+
+        with torch.no_grad():
+            # device = torch.device('cpu')
+            # model = model.to(device)
+            for i in range(len(patch_list)):
+                img = patch_list[i]
+                img = img.to(device).float().unsqueeze(0)
+                pred = model(img)
+                # print(pred.shape)
+                output_masks.append(pred.squeeze(0))
+                output_labels.append(img.squeeze(0))
+                pred = pred.squeeze(0).permute(1, 2, 0).cpu()
+                # print(pred.shape)
+                pred_list.append(pred)
+
+
+            for row in range(0, nrow):
+                for col in range(0, ncol):
+                    # tmp1 = torch.cat(np.asarray(pred_list[row*ncol + col], dim=1))
+                    output_image[row*572 : row*572+572, col*572 : col*572+572] = np.asarray(pred_list[row*ncol + col])
+
+            # output_image = output_image.astype(np.float32)
+            cv2.imwrite("evaluate_result.exr", output_image)
+
+            # heat_map_pred_label_list = None
+            # heat_map_input_label_list = None
+            # Preprocess.Output("", output_masks, output_labels, output_labels, filetype, output_labels,
+            #                   output_labels,
+            #                   heat_map_pred_label_list, heat_map_input_label_list)
+
+    if test_mode != 1 and eval_mode != 1:
         plt.show()
 
         plt.figure()
@@ -241,8 +301,9 @@ def get_args():
     parser.add_option('--preprocess', default=0, type=int)
     parser.add_option('--filetype', default='exr')
     parser.add_option('--eval_mode', default=0, type=int)
+    parser.add_option('--test_mode', default=0, type=int)
     parser.add_option('--resume', default=1, type=int)
-
+    parser.add_option('--eval_image', default='eval_image')
     (options, args) = parser.parse_args()
     return options
 
@@ -250,4 +311,5 @@ if __name__ == '__main__':
     args = get_args()
 
     main(epoch_n=args.epochs, lr=args.learning_rate, data_path=args.data_path, patch_path=args.patch_path,
-         result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess, filetype=args.filetype, eval_mode=args.eval_mode, resume=args.resume)
+         result_path=args.result_path, batch_size=args.batch_size, preprocess=args.preprocess, filetype=args.filetype,
+         test_mode=args.test_mode, eval_mode=args.eval_mode, resume=args.resume, eval_image=args.eval_image)
