@@ -22,6 +22,7 @@ from diffmap import GetDiffMap
 from diffmap import get_heat_map
 from model_RDUnet import *
 import cv2
+import diffmap
 
 
 def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess, filetype, test_mode, eval_mode, resume, eval_image):
@@ -224,25 +225,27 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
                           heat_map_pred_label_list, heat_map_input_label_list)
     else:
         #eval_mode
+        eval_start = time.perf_counter()
+        # print("estart time: ", start)
         #input full size image
         image = cv2.imread(eval_image, cv2.IMREAD_UNCHANGED)
         cv2.imwrite("evaluate_input.exr", image)
         # image = image[:, :, ::-1]
         print(image.shape)
-
+        size = 572
         width = int(image.shape[1])
         height = int(image.shape[0])
-        ncol = int(width/572)
-        nrow = int(height/572)
+        ncol = int(width/size)
+        nrow = int(height/size)
         patch_list = []
         pred_list = []
-        output_image = np.zeros((nrow*572, ncol*572, 3)).astype(np.float32)
+        output_image = np.zeros((nrow*size, ncol*size, 3)).astype(np.float32)
         # output_image = np.asarray(output_image)
         print(output_image.shape)
         output_labels = []
         for row in range(0, nrow):
             for col in range(0, ncol):
-                patch = image[row*572 : row*572+572, col*572 : col*572+572, :]
+                patch = image[row*size : row*size+size, col*size : col*size+size, :]
                 # output_labels.append(torch.tensor(patch).permute(2, 0, 1))
                 # norm_image = (patch - np.min(patch)) / (np.max(patch) - np.min(patch))
                 # print(norm_image.shape)
@@ -275,6 +278,21 @@ def main(epoch_n, lr, data_path, patch_path, result_path, batch_size, preprocess
             # output_image = output_image.astype(np.float32)
             cv2.imwrite("evaluate_result.exr", output_image)
 
+            def RGBtoGray(image):
+                r, g, b = image[:, :, 0], image[:, :, 1], image[:, :, 2]
+                gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+                return gray
+
+            def compare(image, target):
+                gray_image = RGBtoGray(image)
+                gray_target = RGBtoGray(target)
+                difference = np.abs(gray_target - gray_image)
+                return difference
+
+            diff = compare(image[:nrow*size, :ncol*size, :], output_image)
+            cv2.imwrite("evaluate_diff.exr", diff)
+            eval_end = time.perf_counter()
+            print("eval time: " + str(eval_end-eval_start))
             # heat_map_pred_label_list = None
             # heat_map_input_label_list = None
             # Preprocess.Output("", output_masks, output_labels, output_labels, filetype, output_labels,
